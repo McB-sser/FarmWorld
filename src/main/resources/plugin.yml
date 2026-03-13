@@ -1,0 +1,10 @@
+name: FarmWorldPortals
+version: '1.0.0-SNAPSHOT'
+main: de.mcbesser.farmworld.FarmWorldPlugin
+api-version: '1.21'
+authors: [McB_sser]
+description: Portale aus poliertem Diorit/Andesit/Granit mit Froschlicht-Transformation.
+commands:
+  farmreset:
+    description: Zeigt die naechsten FarmWorld-Resets.
+    usage: /farmreset
