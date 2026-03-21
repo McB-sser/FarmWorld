@@ -511,6 +511,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         if (addedLevels > 0) {
             session.remainingSeconds += addedLevels * SECONDS_PER_LEVEL;
+            player.giveExpLevels(addedLevels);
             player.sendMessage(color("&a+" + addedLevels + " Minute(n) Farmzeit durch EXP."));
         }
     }
@@ -629,12 +630,6 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         PlayerInventory inventory = player.getInventory();
         inventory.setItem(freeSlot, compass);
 
-        if (!creativeEntry) {
-            player.setLevel(0);
-            player.setExp(0f);
-            player.setTotalExperience(0);
-        }
-
         BossBar bar = Bukkit.createBossBar("Farmzeit", BarColor.GREEN, BarStyle.SOLID);
         bar.addPlayer(player);
 
@@ -643,7 +638,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         saveClaimsToDisk();
 
         int initialSeconds = creativeEntry ? Integer.MAX_VALUE : bankedLevels * SECONDS_PER_LEVEL;
-        FarmSession session = new FarmSession(type, returnLoc, initialSeconds, freeSlot, bar, creativeEntry);
+        FarmSession session = new FarmSession(type, returnLoc, initialSeconds, freeSlot, bar, creativeEntry, bankedLevels);
         sessions.put(player.getUniqueId(), session);
 
         boolean teleported = player.teleport(targetLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
@@ -651,10 +646,11 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             sessions.remove(player.getUniqueId());
             bar.removeAll();
             inventory.setItem(freeSlot, null);
-            if (!creativeEntry) {
-                player.giveExpLevels(bankedLevels);
-            }
             return false;
+        }
+
+        if (!creativeEntry) {
+            chargeStartedMinute(player, session);
         }
 
         updateBossBar(session, creativeEntry);
@@ -705,6 +701,9 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
             if (!unlimitedTime) {
                 session.remainingSeconds--;
+                if (session.remainingSeconds > 0 && session.remainingSeconds % SECONDS_PER_LEVEL == 0) {
+                    chargeStartedMinute(player, session);
+                }
             }
 
             if (!unlimitedTime && !session.warnedThirty && session.remainingSeconds == 30) {
@@ -752,11 +751,6 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         removeReturnCompass(player);
         session.bossBar.removeAll();
-
-        int refundLevels = Math.max(0, session.remainingSeconds / SECONDS_PER_LEVEL);
-        if (refundLevels > 0) {
-            player.giveExpLevels(refundLevels);
-        }
 
         player.removePotionEffect(PotionEffectType.BLINDNESS);
 
@@ -1050,6 +1044,13 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             return 37 + (level - 15) * 5;
         }
         return 7 + (level * 2);
+    }
+
+    private void chargeStartedMinute(Player player, FarmSession session) {
+        int currentLevel = Math.max(0, player.getLevel());
+        if (currentLevel > 0) {
+            player.setLevel(currentLevel - 1);
+        }
     }
 
     private String formatSeconds(int total) {
@@ -1979,19 +1980,20 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                         callback.accept(insideShelter);
                         return;
                     }
-                    resolveStoredOrRandomEntryLocation(playerId, world, type, storedAnchor, callback);
+                    resolveStoredOrRandomEntryLocation(player, world, type, storedAnchor, callback);
                 });
                 return;
             }
 
-            resolveStoredOrRandomEntryLocation(playerId, world, type, storedAnchor, callback);
+            resolveStoredOrRandomEntryLocation(player, world, type, storedAnchor, callback);
             return;
         }
 
-        resolveRandomEntryLocation(playerId, world, type, callback);
+        resolveRandomEntryLocation(player, world, type, 0, callback);
     }
 
-    private void resolveStoredOrRandomEntryLocation(UUID playerId, World world, PortalType type, Location storedAnchor, java.util.function.Consumer<Location> callback) {
+    private void resolveStoredOrRandomEntryLocation(Player player, World world, PortalType type, Location storedAnchor, java.util.function.Consumer<Location> callback) {
+        UUID playerId = player.getUniqueId();
         Location forWorld = storedAnchor.clone();
         if (forWorld.getWorld() == null || !world.getName().equals(forWorld.getWorld().getName())) {
             forWorld.setWorld(world);
@@ -1999,7 +2001,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         findSafeNearAsync(world, forWorld, 24, safeStored -> {
             if (safeStored == null) {
-                resolveRandomEntryLocation(playerId, world, type, callback);
+                resolveRandomEntryLocation(player, world, type, 0, callback);
                 return;
             }
             if (!shouldBuildShelter(safeStored)) {
@@ -2012,15 +2014,19 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                     callback.accept(insideShelter);
                     return;
                 }
-                resolveRandomEntryLocation(playerId, world, type, callback);
+                resolveRandomEntryLocation(player, world, type, 0, callback);
             });
         });
     }
 
-    private void resolveRandomEntryLocation(UUID playerId, World world, PortalType type, java.util.function.Consumer<Location> callback) {
+    private void resolveRandomEntryLocation(Player player, World world, PortalType type, int searchRound, java.util.function.Consumer<Location> callback) {
+        UUID playerId = player.getUniqueId();
+        if (searchRound > 0) {
+            notifyEntrySearchProgress(player, type, searchRound);
+        }
         findRandomSafeLocationAsync(world, playerId, randomSafe -> {
             if (randomSafe == null) {
-                callback.accept(null);
+                resolveRandomEntryLocation(player, world, type, searchRound + 1, callback);
                 return;
             }
             if (!shouldBuildShelter(randomSafe)) {
@@ -2033,7 +2039,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                     callback.accept(insideShelter);
                     return;
                 }
-                callback.accept(null);
+                resolveRandomEntryLocation(player, world, type, searchRound + 1, callback);
             });
         });
     }
@@ -2063,15 +2069,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
     private void findRandomSafeLocationAsync(World world, UUID playerId, java.util.function.Consumer<Location> callback, double radius, int attempt) {
         if (attempt >= 80) {
-            Location spawn = world.getSpawnLocation().clone().add(0.5, 1.0, 0.5);
-            ensureChunkLoadedAsync(world, spawn.getBlockX(), spawn.getBlockZ(), () -> {
-                if (canSpawnAtRandom(playerId, spawn) && isSafeLocation(spawn)) {
-                    callback.accept(spawn);
-                    return;
-                }
-                findSafeNearAsync(world, spawn, 128, fallback ->
-                        callback.accept(fallback != null ? fallback : spawn));
-            });
+            callback.accept(null);
             return;
         }
 
@@ -2089,6 +2087,19 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             }
             findRandomSafeLocationAsync(world, playerId, callback, radius, attempt + 1);
         });
+    }
+
+    private void notifyEntrySearchProgress(Player player, PortalType type, int searchRound) {
+        if (!player.isOnline()) {
+            return;
+        }
+        if (searchRound == 1) {
+            player.sendMessage(color("&eSuche weiter nach einem sicheren Eintrittspunkt in " + type.displayName + "..."));
+            return;
+        }
+        if (searchRound % 3 == 0) {
+            player.sendMessage(color("&eNoch kein sicherer Platz gefunden. Weitere Suchrunde " + searchRound + " läuft..."));
+        }
     }
 
     private Location findSafeNear(World world, Location center, int range) {
@@ -2653,7 +2664,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         private static ShelterPalette forPortalType(PortalType type) {
             if (type == PortalType.NETHER) {
-                return new ShelterPalette(Material.COBBLED_DEEPSLATE, Material.SHROOMLIGHT, Material.CRIMSON_DOOR);
+                return new ShelterPalette(Material.BLACKSTONE, Material.TORCH, Material.CRIMSON_DOOR);
             }
             if (type == PortalType.END) {
                 return new ShelterPalette(Material.END_STONE_BRICKS, Material.TORCH, Material.BIRCH_DOOR);
@@ -2808,13 +2819,14 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         private int virtualLevel;
         private boolean warnedThirty;
 
-        private FarmSession(PortalType portalType, Location returnLocation, int remainingSeconds, int compassSlot, BossBar bossBar, boolean unlimitedTime) {
+        private FarmSession(PortalType portalType, Location returnLocation, int remainingSeconds, int compassSlot, BossBar bossBar, boolean unlimitedTime, int startingLevel) {
             this.portalType = portalType;
             this.returnLocation = returnLocation;
             this.remainingSeconds = remainingSeconds;
             this.compassSlot = compassSlot;
             this.bossBar = bossBar;
             this.unlimitedTime = unlimitedTime;
+            this.virtualLevel = startingLevel;
         }
     }
 
