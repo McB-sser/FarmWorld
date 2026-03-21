@@ -1923,7 +1923,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         if (storedAnchor != null) {
             Location shelter = getShelterLocation(playerId, type, world);
             if (shelter != null) {
-                Location insideShelter = buildSpawnShelter(shelter);
+                Location insideShelter = buildSpawnShelter(shelter, type);
                 if (insideShelter != null) {
                     return insideShelter;
                 }
@@ -1936,22 +1936,32 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             Location safeStored = findSafeNear(world, forWorld, 24);
             if (safeStored != null) {
                 if (shouldBuildShelter(safeStored)) {
-                    Location insideShelter = buildSpawnShelter(safeStored);
+                    Location insideShelter = buildSpawnShelter(safeStored, type);
                     if (insideShelter != null) {
                         setShelterLocation(playerId, type, insideShelter);
                         return insideShelter;
                     }
+                    return findRandomShelterEntryLocation(world, playerId, type);
                 }
                 return safeStored;
             }
         }
 
+        return findRandomShelterEntryLocation(world, playerId, type);
+    }
+
+    private Location findRandomShelterEntryLocation(World world, UUID playerId, PortalType type) {
         Location randomSafe = findRandomSafeLocation(world, playerId);
+        if (randomSafe == null) {
+            return null;
+        }
         if (shouldBuildShelter(randomSafe)) {
-            Location insideShelter = buildSpawnShelter(randomSafe);
+            Location insideShelter = buildSpawnShelter(randomSafe, type);
             if (insideShelter != null) {
+                setShelterLocation(playerId, type, insideShelter);
                 return insideShelter;
             }
+            return null;
         }
         return randomSafe;
     }
@@ -1964,7 +1974,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         if (storedAnchor != null) {
             Location shelter = getShelterLocation(playerId, type, world);
             if (shelter != null) {
-                buildSpawnShelterAsync(shelter, insideShelter -> {
+                buildSpawnShelterAsync(shelter, type, insideShelter -> {
                     if (insideShelter != null) {
                         callback.accept(insideShelter);
                         return;
@@ -1996,13 +2006,13 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                 callback.accept(safeStored);
                 return;
             }
-            buildSpawnShelterAsync(safeStored, insideShelter -> {
+            buildSpawnShelterAsync(safeStored, type, insideShelter -> {
                 if (insideShelter != null) {
                     setShelterLocation(playerId, type, insideShelter);
                     callback.accept(insideShelter);
                     return;
                 }
-                callback.accept(safeStored);
+                resolveRandomEntryLocation(playerId, world, type, callback);
             });
         });
     }
@@ -2017,13 +2027,13 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                 callback.accept(randomSafe);
                 return;
             }
-            buildSpawnShelterAsync(randomSafe, insideShelter -> {
+            buildSpawnShelterAsync(randomSafe, type, insideShelter -> {
                 if (insideShelter != null) {
                     setShelterLocation(playerId, type, insideShelter);
                     callback.accept(insideShelter);
                     return;
                 }
-                callback.accept(randomSafe);
+                callback.accept(null);
             });
         });
     }
@@ -2246,11 +2256,13 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         return world != null;
     }
 
-    private Location buildSpawnShelter(Location location) {
+    private Location buildSpawnShelter(Location location, PortalType type) {
         World world = location.getWorld();
         if (world == null) {
             return null;
         }
+
+        ShelterPalette palette = ShelterPalette.forPortalType(type);
 
         int cx = location.getBlockX();
         int cz = location.getBlockZ();
@@ -2267,25 +2279,25 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
-                world.getBlockAt(x, floorY, z).setType(Material.COBBLESTONE, false);
-                world.getBlockAt(x, roofY, z).setType(Material.COBBLESTONE, false);
+                world.getBlockAt(x, floorY, z).setType(palette.shellMaterial, false);
+                world.getBlockAt(x, roofY, z).setType(palette.shellMaterial, false);
                 for (int y = floorY + 1; y < roofY; y++) {
                     boolean wall = (x == minX || x == maxX || z == minZ || z == maxZ);
                     Block block = world.getBlockAt(x, y, z);
-                    block.setType(wall ? Material.COBBLESTONE : Material.AIR, false);
+                    block.setType(wall ? palette.shellMaterial : Material.AIR, false);
                 }
             }
         }
 
-        world.getBlockAt(cx, floorY + 1, cz).setType(Material.TORCH, false);
-        placeDoor(world, cx, floorY + 1, minZ, BlockFace.NORTH);
-        placeDoor(world, cx, floorY + 1, maxZ, BlockFace.SOUTH);
-        placeDoor(world, minX, floorY + 1, cz, BlockFace.WEST);
-        placeDoor(world, maxX, floorY + 1, cz, BlockFace.EAST);
+        world.getBlockAt(cx, floorY + 1, cz).setType(palette.lightMaterial, false);
+        placeDoor(world, cx, floorY + 1, minZ, BlockFace.NORTH, palette.doorMaterial);
+        placeDoor(world, cx, floorY + 1, maxZ, BlockFace.SOUTH, palette.doorMaterial);
+        placeDoor(world, minX, floorY + 1, cz, BlockFace.WEST, palette.doorMaterial);
+        placeDoor(world, maxX, floorY + 1, cz, BlockFace.EAST, palette.doorMaterial);
         return new Location(world, cx + 0.5, floorY + 1.0, cz + 0.5);
     }
 
-    private void buildSpawnShelterAsync(Location location, java.util.function.Consumer<Location> callback) {
+    private void buildSpawnShelterAsync(Location location, PortalType type, java.util.function.Consumer<Location> callback) {
         World world = location.getWorld();
         if (world == null) {
             callback.accept(null);
@@ -2295,7 +2307,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         int cx = location.getBlockX();
         int cz = location.getBlockZ();
         loadAreaChunksAsync(world, cx - 2, cx + 2, cz - 2, cz + 2, () ->
-                callback.accept(buildSpawnShelter(location)));
+                callback.accept(buildSpawnShelter(location, type)));
     }
 
     private void ensureChunkLoadedAsync(World world, int blockX, int blockZ, Runnable callback) {
@@ -2352,14 +2364,14 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         return true;
     }
 
-    private void placeDoor(World world, int x, int y, int z, BlockFace facing) {
+    private void placeDoor(World world, int x, int y, int z, BlockFace facing, Material doorMaterial) {
         BlockFace rotated = facing.getOppositeFace();
         Block lower = world.getBlockAt(x, y, z);
         Block upper = world.getBlockAt(x, y + 1, z);
-        lower.setType(Material.OAK_DOOR, false);
-        upper.setType(Material.OAK_DOOR, false);
+        lower.setType(doorMaterial, false);
+        upper.setType(doorMaterial, false);
 
-        BlockData lowerData = Bukkit.createBlockData(Material.OAK_DOOR);
+        BlockData lowerData = Bukkit.createBlockData(doorMaterial);
         if (lowerData instanceof Door lowerDoor) {
             lowerDoor.setFacing(rotated);
             lowerDoor.setHalf(Bisected.Half.BOTTOM);
@@ -2367,7 +2379,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             lower.setBlockData(lowerDoor, false);
         }
 
-        BlockData upperData = Bukkit.createBlockData(Material.OAK_DOOR);
+        BlockData upperData = Bukkit.createBlockData(doorMaterial);
         if (upperData instanceof Door upperDoor) {
             upperDoor.setFacing(rotated);
             upperDoor.setHalf(Bisected.Half.TOP);
@@ -2625,6 +2637,28 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                 }
             }
             return null;
+        }
+    }
+
+    private static final class ShelterPalette {
+        private final Material shellMaterial;
+        private final Material lightMaterial;
+        private final Material doorMaterial;
+
+        private ShelterPalette(Material shellMaterial, Material lightMaterial, Material doorMaterial) {
+            this.shellMaterial = shellMaterial;
+            this.lightMaterial = lightMaterial;
+            this.doorMaterial = doorMaterial;
+        }
+
+        private static ShelterPalette forPortalType(PortalType type) {
+            if (type == PortalType.NETHER) {
+                return new ShelterPalette(Material.COBBLED_DEEPSLATE, Material.SHROOMLIGHT, Material.CRIMSON_DOOR);
+            }
+            if (type == PortalType.END) {
+                return new ShelterPalette(Material.END_STONE_BRICKS, Material.TORCH, Material.BIRCH_DOOR);
+            }
+            return new ShelterPalette(Material.COBBLESTONE, Material.TORCH, Material.OAK_DOOR);
         }
     }
 
