@@ -511,7 +511,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         if (addedLevels > 0) {
             session.remainingSeconds += addedLevels * SECONDS_PER_LEVEL;
-            player.giveExpLevels(addedLevels);
+            changePlayerLevelsAccurately(player, addedLevels);
             player.sendMessage(color("&a+" + addedLevels + " Minute(n) Farmzeit durch EXP."));
         }
     }
@@ -1049,7 +1049,42 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
     private void chargeStartedMinute(Player player, FarmSession session) {
         int currentLevel = Math.max(0, player.getLevel());
         if (currentLevel > 0) {
-            player.setLevel(currentLevel - 1);
+            changePlayerLevelsAccurately(player, -1);
+        }
+    }
+
+    private void changePlayerLevelsAccurately(Player player, int levelDelta) {
+        if (levelDelta == 0) {
+            return;
+        }
+
+        int currentLevel = Math.max(0, player.getLevel());
+        float currentProgress = Math.max(0f, Math.min(1f, player.getExp()));
+        int targetLevel = Math.max(0, currentLevel + levelDelta);
+        int targetTotalExperience = experienceAtLevelStart(targetLevel)
+                + Math.round(currentProgress * xpToNextLevel(targetLevel));
+        setAccurateTotalExperience(player, targetTotalExperience);
+    }
+
+    private int experienceAtLevelStart(int level) {
+        if (level <= 0) {
+            return 0;
+        }
+        if (level <= 16) {
+            return level * level + (6 * level);
+        }
+        if (level <= 31) {
+            return (int) Math.round((2.5 * level * level) - (40.5 * level) + 360);
+        }
+        return (int) Math.round((4.5 * level * level) - (162.5 * level) + 2220);
+    }
+
+    private void setAccurateTotalExperience(Player player, int totalExperience) {
+        player.setExp(0f);
+        player.setLevel(0);
+        player.setTotalExperience(0);
+        if (totalExperience > 0) {
+            player.giveExp(totalExperience);
         }
     }
 
