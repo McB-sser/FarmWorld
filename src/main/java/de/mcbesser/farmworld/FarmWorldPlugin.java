@@ -1969,7 +1969,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             if (forWorld.getWorld() == null || !world.getName().equals(forWorld.getWorld().getName())) {
                 forWorld.setWorld(world);
             }
-            Location safeStored = findSafeNear(world, forWorld, 24);
+            Location safeStored = resolveClaimEntryLocation(world, forWorld);
             if (safeStored != null) {
                 if (shouldBuildShelter(safeStored)) {
                     Location insideShelter = buildSpawnShelter(safeStored, type);
@@ -1977,10 +1977,18 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                         setShelterLocation(playerId, type, insideShelter);
                         return insideShelter;
                     }
-                    return findRandomShelterEntryLocation(world, playerId, type);
+                    return safeStored;
                 }
                 return safeStored;
             }
+
+            Location insideShelter = buildSpawnShelter(forWorld, type);
+            if (insideShelter != null) {
+                setShelterLocation(playerId, type, insideShelter);
+                return insideShelter;
+            }
+
+            return forWorld;
         }
 
         return findRandomShelterEntryLocation(world, playerId, type);
@@ -2034,9 +2042,16 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             forWorld.setWorld(world);
         }
 
-        findSafeNearAsync(world, forWorld, 24, safeStored -> {
+        resolveClaimEntryLocationAsync(world, forWorld, safeStored -> {
             if (safeStored == null) {
-                resolveRandomEntryLocation(player, world, type, 0, callback);
+                buildSpawnShelterAsync(forWorld, type, insideShelter -> {
+                    if (insideShelter != null) {
+                        setShelterLocation(playerId, type, insideShelter);
+                        callback.accept(insideShelter);
+                        return;
+                    }
+                    callback.accept(forWorld);
+                });
                 return;
             }
             if (!shouldBuildShelter(safeStored)) {
@@ -2049,7 +2064,38 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                     callback.accept(insideShelter);
                     return;
                 }
-                resolveRandomEntryLocation(player, world, type, 0, callback);
+                callback.accept(safeStored);
+            });
+        });
+    }
+
+    private Location resolveClaimEntryLocation(World world, Location storedAnchor) {
+        if (isSafeLocation(storedAnchor)) {
+            return storedAnchor.clone();
+        }
+
+        Location sameColumn = findSafeAtXZ(world, storedAnchor.getBlockX(), storedAnchor.getBlockZ());
+        if (sameColumn != null) {
+            return sameColumn;
+        }
+
+        return findSafeNear(world, storedAnchor, 24);
+    }
+
+    private void resolveClaimEntryLocationAsync(World world, Location storedAnchor, java.util.function.Consumer<Location> callback) {
+        ensureChunkLoadedAsync(world, storedAnchor.getBlockX(), storedAnchor.getBlockZ(), () -> {
+            if (isSafeLocation(storedAnchor)) {
+                callback.accept(storedAnchor.clone());
+                return;
+            }
+
+            findSafeAtXZAsync(world, storedAnchor.getBlockX(), storedAnchor.getBlockZ(), sameColumn -> {
+                if (sameColumn != null) {
+                    callback.accept(sameColumn);
+                    return;
+                }
+
+                findSafeNearAsync(world, storedAnchor, 24, callback);
             });
         });
     }
