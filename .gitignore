@@ -1,5 +1,6 @@
 # Maven build output
 /target/
+/.cp.txt
 
 # Compiled Java classes and packaged artifacts
 *.class
