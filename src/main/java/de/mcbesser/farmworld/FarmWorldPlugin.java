@@ -413,7 +413,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         }
         if (!canUseZone(event.getPlayer().getUniqueId(), zone)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(color("&cIn dieser Leitstein-Zone darfst du nichts abbauen."));
+            event.getPlayer().sendMessage(color("&cIn diesem Claim darfst du nichts abbauen."));
         }
     }
 
@@ -428,7 +428,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         }
         if (!canUseZone(event.getPlayer().getUniqueId(), zone)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(color("&cIn dieser Leitstein-Zone darfst du nicht interagieren."));
+            event.getPlayer().sendMessage(color("&cIn diesem Claim darfst du nicht interagieren."));
         }
     }
 
@@ -452,8 +452,8 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         }
 
         zone.allowedPlayers.add(target.getUniqueId());
-        owner.sendMessage(color("&a" + target.getName() + " hat jetzt Zugriff auf deine Leitstein-Zone."));
-        target.sendMessage(color("&aDu hast Zugriff auf die Leitstein-Zone von " + owner.getName() + "."));
+        owner.sendMessage(color("&a" + target.getName() + " hat jetzt Zugriff auf deinen Claim."));
+        target.sendMessage(color("&aDu hast Zugriff auf den Claim von " + owner.getName() + "."));
         saveClaimsToDisk();
         event.setCancelled(true);
     }
@@ -2579,7 +2579,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         if (ownerName == null || ownerName.isBlank()) {
             ownerName = zone.owner.toString().substring(0, 8);
         }
-        player.sendMessage(color("&eDu betrittst die Leitstein-Zone von " + ownerName + "."));
+        player.sendMessage(color("&eDu betrittst den Claim von " + ownerName + "."));
     }
 
     private void renderZoneParticles() {
