@@ -1,4 +1,4 @@
-package de.mcbesser.farmworld;
+﻿package de.mcbesser.farmworld;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -275,7 +275,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             event.setCancelled(true);
 
             if (isFarmWorld(player.getWorld().getName())) {
-                endSession(player, true, "&eDu wurdest zu deinem Portal zurückgebracht.");
+                endSession(player, true, "&eDu wurdest zu deinem Portal zur\u00fcckgebracht.");
                 return;
             }
 
@@ -286,7 +286,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
             int freeSlot = player.getInventory().firstEmpty();
             if (freeSlot < 0) {
-                player.sendMessage(color("&cDu brauchst mindestens 1 freien Inventar-Slot für den Rückkehr-Kompass."));
+                player.sendMessage(color("&cDu brauchst mindestens 1 freien Inventar-Slot f\u00fcr den R\u00fcckkehr-Kompass."));
                 return;
             }
 
@@ -315,7 +315,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         if (isFarmWorld(player.getWorld().getName())) {
             event.setCancelled(true);
-            endSession(player, true, "&eDu wurdest zu deinem Portal zurückgebracht.");
+            endSession(player, true, "&eDu wurdest zu deinem Portal zur\u00fcckgebracht.");
         }
     }
 
@@ -392,17 +392,17 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         }
 
         if (isUnlimitedFarmMode(player)) {
-            endSession(player, true, "&aCreative/Spectator: sofortige Rückkehr.");
+            endSession(player, true, "&aCreative/Spectator: sofortige R\u00fcckkehr.");
             return;
         }
 
         if (returnCountdowns.containsKey(player.getUniqueId())) {
-            player.sendMessage(color("&eRückkehr-Countdown läuft bereits."));
+            player.sendMessage(color("&eR\u00fcckkehr-Countdown l\u00e4uft bereits."));
             return;
         }
 
         returnCountdowns.put(player.getUniqueId(), new ReturnCountdown(RETURN_COUNTDOWN_SECONDS));
-        player.sendMessage(color("&eBleib " + RETURN_COUNTDOWN_SECONDS + " Sekunden still stehen, um zurückzureisen."));
+        player.sendMessage(color("&eBleib " + RETURN_COUNTDOWN_SECONDS + " Sekunden still stehen, um zur\u00fcckzureisen."));
     }
 
     @EventHandler
@@ -482,7 +482,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
         if (movedBlock) {
             returnCountdowns.remove(player.getUniqueId());
-            player.sendMessage(color("&cRückkehr abgebrochen, da du dich bewegt hast."));
+            player.sendMessage(color("&cR\u00fcckkehr abgebrochen, da du dich bewegt hast."));
         }
     }
 
@@ -586,7 +586,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             return false;
         }
 
-        sender.sendMessage(color("&eNächste Farm-Resets (" + zoneId + "):"));
+        sender.sendMessage(color("&eN\u00e4chste Farm-Resets (" + zoneId + "):"));
         LocalDateTime nearest = null;
         PortalType nearestType = null;
 
@@ -605,7 +605,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         }
 
         if (nearest != null && nearestType != null) {
-            sender.sendMessage(color("&7Nächster globaler Reset: &f" + nearestType.displayName + " &7am &a" + RESET_FORMAT.format(nearest)));
+            sender.sendMessage(color("&7N\u00e4chster globaler Reset: &f" + nearestType.displayName + " &7am &a" + RESET_FORMAT.format(nearest)));
         }
 
         return true;
@@ -687,16 +687,16 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             if (countdown != null) {
                 if (isUnlimitedFarmMode(player)) {
                     returnCountdowns.remove(player.getUniqueId());
-                    endSession(player, true, "&aCreative/Spectator: sofortige Rückkehr.");
+                    endSession(player, true, "&aCreative/Spectator: sofortige R\u00fcckkehr.");
                     continue;
                 }
                 countdown.secondsLeft--;
                 if (countdown.secondsLeft <= 0) {
                     returnCountdowns.remove(player.getUniqueId());
-                    endSession(player, true, "&aDu wurdest erfolgreich zurückteleportiert.");
+                    endSession(player, true, "&aDu wurdest erfolgreich zur\u00fcckteleportiert.");
                     continue;
                 }
-                player.sendActionBar(color("&eRückkehr in " + countdown.secondsLeft + "s - bitte still stehen"));
+                player.sendActionBar(color("&eR\u00fcckkehr in " + countdown.secondsLeft + "s - bitte still stehen"));
             }
 
             if (!unlimitedTime) {
@@ -713,13 +713,13 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
             if (!unlimitedTime && session.remainingSeconds <= 10 && session.remainingSeconds > 0) {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 40, 0, false, false, false));
-                player.sendMessage(color("&cNoch " + session.remainingSeconds + " Sekunden bis zur Rückkehr."));
+                player.sendMessage(color("&cNoch " + session.remainingSeconds + " Sekunden bis zur R\u00fcckkehr."));
             }
 
             updateBossBar(session, unlimitedTime);
 
             if (!unlimitedTime && session.remainingSeconds <= 0) {
-                endSession(player, true, "&cFarmzeit abgelaufen. Du wurdest zurückteleportiert.");
+                endSession(player, true, "&cFarmzeit abgelaufen. Du wurdest zur\u00fcckteleportiert.");
             }
         }
     }
@@ -733,7 +733,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             target = findSafeReturnLocationNear(target);
         }
         player.teleport(target, PlayerTeleportEvent.TeleportCause.PLUGIN);
-        player.sendMessage(color("&eDu warst ohne aktive Sitzung in einer FarmWorld und wurdest zum letzten Portal zurückteleportiert."));
+        player.sendMessage(color("&eDu warst ohne aktive Sitzung in einer FarmWorld und wurdest zum letzten Portal zur\u00fcckteleportiert."));
     }
 
     private void endSession(Player player, boolean teleportBack, String message) {
@@ -840,12 +840,12 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
     }
 
     private void applyReturnCompassMeta(CompassMeta compassMeta) {
-        compassMeta.setDisplayName(color("&eRückkehr-Kompass"));
+        compassMeta.setDisplayName(color("&eR\u00fcckkehr-Kompass"));
         compassMeta.setLore(Arrays.asList(
                 color("&7Funktionen:"),
-                color("&f- Rechtsklick: &7Rückkehr-Countdown starten"),
+                color("&f- Rechtsklick: &7R\u00fcckkehr-Countdown starten"),
                 color("&f- Shift + Rechtsklick Block: &7Claim setzen"),
-                color("&f- Shift + Linksklick: &7Claim löschen"),
+                color("&f- Shift + Linksklick: &7Claim l\u00f6schen"),
                 color("&f- Shift + Rechtsklick Spieler: &7Zugriff teilen")
         ));
         compassMeta.getPersistentDataContainer().set(compassKey, PersistentDataType.BYTE, (byte) 1);
@@ -885,7 +885,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
 
     private void claimWithCompass(Player player, PortalType type, Location requestedAnchor) {
         if (!type.worldName.equals(player.getWorld().getName())) {
-            player.sendMessage(color("&cDu kannst hier keinen Claim für diese Farm setzen."));
+            player.sendMessage(color("&cDu kannst hier keinen Claim f\u00fcr diese Farm setzen."));
             return;
         }
 
@@ -915,7 +915,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         clearShelterLocation(player.getUniqueId(), type);
         farmAnchors.computeIfAbsent(player.getUniqueId(), ignored -> new EnumMap<>(PortalType.class)).put(type, anchor);
         applyAnchorToReturnCompass(player, anchor);
-        player.sendMessage(color("&aClaim für " + type.displayName + " gesetzt. Kompass zeigt jetzt auf den Claim."));
+        player.sendMessage(color("&aClaim f\u00fcr " + type.displayName + " gesetzt. Kompass zeigt jetzt auf den Claim."));
         saveClaimsToDisk();
     }
 
@@ -942,9 +942,9 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         clearAnchorFromReturnCompass(player);
 
         if (removed) {
-            player.sendMessage(color("&eClaim für " + type.displayName + " gelöscht."));
+            player.sendMessage(color("&eClaim f\u00fcr " + type.displayName + " gel\u00f6scht."));
         } else {
-            player.sendMessage(color("&eDu hast aktuell keinen Claim für " + type.displayName + "."));
+            player.sendMessage(color("&eDu hast aktuell keinen Claim f\u00fcr " + type.displayName + "."));
         }
         saveClaimsToDisk();
     }
@@ -1582,7 +1582,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             World world = Bukkit.getWorld(worldName);
             if (world != null) {
                 for (Player player : new ArrayList<>(world.getPlayers())) {
-                    endSession(player, true, "&eFarmWorld wurde zurückgesetzt.");
+                    endSession(player, true, "&eFarmWorld wurde zur\u00fcckgesetzt.");
                 }
 
                 if (!Bukkit.unloadWorld(world, false)) {
@@ -1606,8 +1606,8 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             LocalDateTime newNext = computeNextReset(type, now.plusMinutes(1));
             nextResets.put(type, newNext);
 
-            Bukkit.broadcastMessage(color("&6[FarmWorld] &e" + type.displayName + " wurde zurückgesetzt."));
-            getLogger().info(type.displayName + " reset abgeschlossen. Nächster Reset: " + RESET_FORMAT.format(newNext));
+            Bukkit.broadcastMessage(color("&6[FarmWorld] &e" + type.displayName + " wurde zur\u00fcckgesetzt."));
+            getLogger().info(type.displayName + " reset abgeschlossen. N\u00e4chster Reset: " + RESET_FORMAT.format(newNext));
         } finally {
             resetRunning = false;
         }
@@ -1637,7 +1637,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                 }
             });
         } catch (IOException ex) {
-            throw new IllegalStateException("Konnte Weltordner nicht löschen: " + worldName, ex);
+            throw new IllegalStateException("Konnte Weltordner nicht l\u00f6schen: " + worldName, ex);
         }
     }
 
@@ -2179,7 +2179,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             return;
         }
         if (searchRound % 3 == 0) {
-            player.sendMessage(color("&eNoch kein sicherer Platz gefunden. Weitere Suchrunde " + searchRound + " läuft..."));
+            player.sendMessage(color("&eNoch kein sicherer Platz gefunden. Weitere Suchrunde " + searchRound + " l\u00e4uft..."));
         }
     }
 
@@ -2689,7 +2689,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
     private void logNextResets() {
         for (PortalType type : PortalType.values()) {
             LocalDateTime next = nextResets.get(type);
-            getLogger().info("Nächster Reset " + type.displayName + ": " + RESET_FORMAT.format(next));
+            getLogger().info("N\u00e4chster Reset " + type.displayName + ": " + RESET_FORMAT.format(next));
         }
     }
 
