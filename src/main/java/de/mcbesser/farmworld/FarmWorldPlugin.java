@@ -133,10 +133,10 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         loadClaimsFromDisk();
         Bukkit.getScheduler().runTask(this, this::restorePendingActivePortals);
 
-        portalMonitorTask = Bukkit.getScheduler().runTaskTimer(this, this::monitorPortals, 20L, 20L);
-        resetMonitorTask = Bukkit.getScheduler().runTaskTimer(this, this::monitorResets, 20L, 20L * 60L);
-        sessionTickTask = Bukkit.getScheduler().runTaskTimer(this, this::tickSessions, 20L, 20L);
-        zoneParticleTask = Bukkit.getScheduler().runTaskTimer(this, this::renderZoneParticles, 20L, 20L);
+        portalMonitorTask = Bukkit.getScheduler().runTaskTimer(this, this::monitorPortals, 9L, 20L);
+        resetMonitorTask = Bukkit.getScheduler().runTaskTimer(this, this::monitorResets, 53L, 20L * 60L);
+        sessionTickTask = Bukkit.getScheduler().runTaskTimer(this, this::tickSessions, 23L, 20L);
+        zoneParticleTask = Bukkit.getScheduler().runTaskTimer(this, this::renderZoneParticles, 17L, 20L);
 
         getLogger().info("FarmWorld-Portalplugin aktiviert.");
         logNextResets();
