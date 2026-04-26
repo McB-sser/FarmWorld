@@ -844,9 +844,9 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         compassMeta.setLore(Arrays.asList(
                 color("&7Funktionen:"),
                 color("&f- Rechtsklick: &7R\u00fcckkehr-Countdown starten"),
-                color("&f- Shift + Rechtsklick Block: &7Claim setzen"),
-                color("&f- Shift + Linksklick: &7Claim l\u00f6schen"),
-                color("&f- Shift + Rechtsklick Spieler: &7Zugriff teilen")
+                color("&f- Ducken + Rechtsklick Block: &7Claim setzen"),
+                color("&f- Ducken + Linksklick: &7Claim l\u00f6schen"),
+                color("&f- Ducken + Rechtsklick Spieler: &7Zugriff teilen")
         ));
         compassMeta.getPersistentDataContainer().set(compassKey, PersistentDataType.BYTE, (byte) 1);
     }

@@ -139,9 +139,9 @@ Der Kompass kann nicht wie ein normales Item behandelt werden:
 Seine Funktionen:
 
 - Rechtsklick: Rueckkehr-Countdown starten
-- Shift + Rechtsklick auf Block: Claim setzen
-- Shift + Linksklick: Claim loeschen
-- Shift + Rechtsklick auf Spieler: Zugriff auf Claim-Zone teilen
+- Ducken + Rechtsklick auf Block: Claim setzen
+- Ducken + Linksklick: Claim loeschen
+- Ducken + Rechtsklick auf Spieler: Zugriff auf Claim-Zone teilen
 
 Wenn ein Claim gesetzt wurde, zeigt der Kompass ueber einen Lodestone-Zielpunkt auf den gesetzten Farm-Anker.
 
