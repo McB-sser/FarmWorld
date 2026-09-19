@@ -1,7 +1,9 @@
 package de.mcbesser.farmworld;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -71,7 +73,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,6 +93,8 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
     private static final double FARM_BORDER_DIAMETER = 5000.0;
     private static final int SAFE_BORDER_MARGIN = 16;
     private static final int SPAWNER_SAFE_RADIUS = 12;
+    private static final LegacyComponentSerializer AMPERSAND_COLORS = LegacyComponentSerializer.legacyAmpersand();
+    private static final LegacyComponentSerializer SECTION_COLORS = LegacyComponentSerializer.legacySection();
 
     private final List<ActivePortal> activePortals = new ArrayList<>();
     private final List<PendingActivePortal> pendingActivePortals = new ArrayList<>();
@@ -696,7 +699,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
                     endSession(player, true, "&aDu wurdest erfolgreich zur\u00fcckteleportiert.");
                     continue;
                 }
-                player.sendActionBar(color("&eR\u00fcckkehr in " + countdown.secondsLeft + "s - bitte still stehen"));
+                player.sendActionBar(component("&eR\u00fcckkehr in " + countdown.secondsLeft + "s - bitte still stehen"));
             }
 
             if (!unlimitedTime) {
@@ -840,13 +843,13 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
     }
 
     private void applyReturnCompassMeta(CompassMeta compassMeta) {
-        compassMeta.setDisplayName(color("&eR\u00fcckkehr-Kompass"));
-        compassMeta.setLore(Arrays.asList(
-                color("&7Funktionen:"),
-                color("&f- Rechtsklick: &7R\u00fcckkehr-Countdown starten"),
-                color("&f- Ducken + Rechtsklick Block: &7Claim setzen"),
-                color("&f- Ducken + Linksklick: &7Claim l\u00f6schen"),
-                color("&f- Ducken + Rechtsklick Spieler: &7Zugriff teilen")
+        compassMeta.displayName(itemComponent("&eR\u00fcckkehr-Kompass"));
+        compassMeta.lore(List.of(
+                itemComponent("&7Funktionen:"),
+                itemComponent("&f- Rechtsklick: &7R\u00fcckkehr-Countdown starten"),
+                itemComponent("&f- Ducken + Rechtsklick Block: &7Claim setzen"),
+                itemComponent("&f- Ducken + Linksklick: &7Claim l\u00f6schen"),
+                itemComponent("&f- Ducken + Rechtsklick Spieler: &7Zugriff teilen")
         ));
         compassMeta.getPersistentDataContainer().set(compassKey, PersistentDataType.BYTE, (byte) 1);
     }
@@ -1099,7 +1102,15 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
         if (input == null) {
             return "";
         }
-        return ChatColor.translateAlternateColorCodes('&', input);
+        return SECTION_COLORS.serialize(component(input));
+    }
+
+    private Component component(String input) {
+        return input == null ? Component.empty() : AMPERSAND_COLORS.deserialize(input);
+    }
+
+    private Component itemComponent(String input) {
+        return component(input).decoration(TextDecoration.ITALIC, false);
     }
 
     private boolean isUnlimitedFarmMode(Player player) {
@@ -1606,7 +1617,7 @@ public class FarmWorldPlugin extends JavaPlugin implements Listener, CommandExec
             LocalDateTime newNext = computeNextReset(type, now.plusMinutes(1));
             nextResets.put(type, newNext);
 
-            Bukkit.broadcastMessage(color("&6[FarmWorld] &e" + type.displayName + " wurde zur\u00fcckgesetzt."));
+            Bukkit.broadcast(component("&6[FarmWorld] &e" + type.displayName + " wurde zur\u00fcckgesetzt."));
             getLogger().info(type.displayName + " reset abgeschlossen. N\u00e4chster Reset: " + RESET_FORMAT.format(newNext));
         } finally {
             resetRunning = false;

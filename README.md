@@ -1,6 +1,6 @@
 # FarmWorld
 
-FarmWorld ist ein Paper-Plugin fuer Minecraft 1.21.x, das drei getrennte Farmwelten ueber spezielle Portale bereitstellt: eine Farm-Oberwelt, einen Farm-Nether und ein Farm-End. Das Plugin ersetzt dabei nicht einfach nur normale Netherportale, sondern fuegt ein komplettes Zugangssystem mit Zeitlimit, Rueckkehr-Kompass, Claim-Zonen und automatischen Welt-Resets hinzu.
+FarmWorld ist ein Paper-Plugin fuer Minecraft 26.3, das drei getrennte Farmwelten ueber spezielle Portale bereitstellt: eine Farm-Oberwelt, einen Farm-Nether und ein Farm-End. Das Plugin ersetzt dabei nicht einfach nur normale Netherportale, sondern fuegt ein komplettes Zugangssystem mit Zeitlimit, Rueckkehr-Kompass, Claim-Zonen und automatischen Welt-Resets hinzu.
 
 Die Grundidee ist einfach: Spieler betreten eine Farmwelt nicht dauerhaft, sondern fuer eine begrenzte Session. Die verfuegbare Zeit wird beim Eintritt aus den aktuellen Erfahrungsleveln berechnet. In der Farmwelt koennen Spieler einen eigenen sicheren Punkt markieren, dorthin bei spaeteren Besuchen zurueckkehren und ihre Zone gegen fremden Zugriff schuetzen. Nach fest definierten Reset-Terminen wird die jeweilige Farmwelt komplett neu erzeugt, damit Ressourcen regelmaessig frisch verfuegbar sind.
 
@@ -27,8 +27,8 @@ Das Plugin erweitert einen Server um ein kontrolliertes Farmwelt-System mit folg
 
 ## Voraussetzungen
 
-- Paper API 1.21.4
-- Java 21
+- Paper 26.3
+- Java 25
 - Maven-Projekt mit Packaging `jar`
 
 ## Konzept im Ueberblick
